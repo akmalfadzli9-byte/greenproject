@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ms" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Pemantauan sensor rumah hijau – suhu, kelembapan, pH, cahaya secara real-time.">
+    <title>Sensor | Greenhouse SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { transition: background-color 0.3s, color 0.2s; }
+        .sensor-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .sensor-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -12px rgba(0,0,0,0.15); }
+        .blink-red { animation: blinkWarning 1s infinite; }
+        @keyframes blinkWarning {
+            0% { opacity: 1; background-color: rgba(239, 68, 68, 0.2); }
+            50% { opacity: 0.6; background-color: rgba(239, 68, 68, 0.5); }
+            100% { opacity: 1; background-color: rgba(239, 68, 68, 0.2); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M6 14h12m-6-8v16m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-bold text-xl">GreenHouse SaaS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="dashboard.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Dashboard</a>
+                    <a href="report.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Laporan</a>
+                    <a href="tetapan.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Tetapan</a>
+                    <button id="darkmode-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="login.html" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm transition">Log Keluar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold">📡 Pemantauan Sensor</h1>
+                <p class="text-gray-600 dark:text-gray-400">Data terkini dari rumah hijau – disegarkan setiap 10 saat</p>
+            </div>
+            <button id="refresh-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Segar Semula
+            </button>
+        </div>
+
+        <!-- Grid Sensor Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
+            <!-- Suhu -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sensor-card" id="card-suhu">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">🌡️ Suhu Udara</p>
+                        <p class="text-3xl font-bold mt-1"><span id="suhu-value">28.5</span>°C</p>
+                    </div>
+                    <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/40 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs" id="suhu-status">Normal</div>
+            </div>
+
+            <!-- Kelembapan Tanah -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sensor-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">💧 Kelembapan Tanah</p>
+                        <p class="text-3xl font-bold mt-1"><span id="kelembapan-value">74</span>%</p>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs" id="kelembapan-status">Optimal</div>
+            </div>
+
+            <!-- Kelembapan Udara -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sensor-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">💨 Kelembapan Udara</p>
+                        <p class="text-3xl font-bold mt-1"><span id="humidity-value">68</span>%</p>
+                    </div>
+                    <div class="w-10 h-10 bg-teal-100 dark:bg-teal-900/40 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4M12 4v16" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs" id="humidity-status">Normal</div>
+            </div>
+
+            <!-- pH Tanah -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sensor-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">🧪 pH Tanah</p>
+                        <p class="text-3xl font-bold mt-1"><span id="ph-value">6.8</span></p>
+                    </div>
+                    <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 5h-6L8 4z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs" id="ph-status">Normal (6.0-7.0)</div>
+            </div>
+
+            <!-- Intensiti Cahaya -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sensor-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">☀️ Intensiti Cahaya</p>
+                        <p class="text-3xl font-bold mt-1"><span id="light-value">18500</span> lux</p>
+                    </div>
+                    <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/40 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs" id="light-status">Baik</div>
+            </div>
+        </div>
+
+        <!-- Graf Suhu 24 Jam -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 mb-8">
+            <h2 class="text-xl font-semibold mb-4">📈 Trend Suhu (24 jam lepas)</h2>
+            <canvas id="tempHistoryChart" height="100" class="w-full"></canvas>
+        </div>
+
+        <!-- Status Sistem / Alert Terkini -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+            <h2 class="text-xl font-semibold mb-3">⚠️ Alert & Cadangan</h2>
+            <div id="alert-container" class="space-y-2">
+                <div class="p-3 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded">
+                    ✅ Semua sensor berfungsi normal.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-12 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <p>© 2025 Greenhouse SaaS – Data sensor disimulasi. Segarkan untuk data baharu.</p>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- Dark mode ----------
+            function initDarkMode() {
+                const saved = localStorage.getItem('greenhouse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+
+            function toggleDarkMode() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('greenhouse-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('greenhouse-theme', 'dark');
+                }
+                // Re-render chart with new theme
+                if (window.tempChartInstance) {
+                    updateChartTheme();
+                }
+            }
+
+            // ---------- Sensor Data Simulation (realistic random within acceptable ranges) ----------
+            let sensorData = {
+                suhu: 28.5,
+                kelembapanTanah: 74,
+                kelembapanUdara: 68,
+                ph: 6.8,
+                cahaya: 18500
+            };
+
+            function generateRandomSensorData() {
+                // Slight variations but within ideal ranges (demo)
+                sensorData.suhu = +(27.5 + Math.random() * 3).toFixed(1);      // 27.5 - 30.5
+                sensorData.kelembapanTanah = Math.floor(65 + Math.random() * 25); // 65-90%
+                sensorData.kelembapanUdara = Math.floor(55 + Math.random() * 30); // 55-85%
+                sensorData.ph = +(6.2 + Math.random() * 1.2).toFixed(1);         // 6.2 - 7.4
+                sensorData.cahaya = Math.floor(12000 + Math.random() * 12000);    // 12000 - 24000 lux
+                updateUI();
+                updateAlerts();
+                // Also add new point to chart history
+                addHistoryPoint(sensorData.suhu);
+            }
+
+            function updateUI() {
+                document.getElementById('suhu-value').innerText = sensorData.suhu;
+                document.getElementById('kelembapan-value').innerText = sensorData.kelembapanTanah;
+                document.getElementById('humidity-value').innerText = sensorData.kelembapanUdara;
+                document.getElementById('ph-value').innerText = sensorData.ph;
+                document.getElementById('light-value').innerText = sensorData.cahaya;
+
+                // Update status texts and warning styles
+                // Suhu
+                const suhuStatus = document.getElementById('suhu-status');
+                if (sensorData.suhu > 30) {
+                    suhuStatus.innerHTML = '⚠️ Terlalu panas! (>30°C)';
+                    suhuStatus.className = 'mt-2 text-xs text-red-600 dark:text-red-400';
+                    document.getElementById('card-suhu').classList.add('blink-red');
+                } else if (sensorData.suhu < 24) {
+                    suhuStatus.innerHTML = '⚠️ Sejuk (<24°C)';
+                    suhuStatus.className = 'mt-2 text-xs text-blue-600 dark:text-blue-400';
+                    document.getElementById('card-suhu').classList.add('blink-red');
+                } else {
+                    suhuStatus.innerHTML = '✅ Normal (24-30°C)';
+                    suhuStatus.className = 'mt-2 text-xs text-green-600 dark:text-green-400';
+                    document.getElementById('card-suhu').classList.remove('blink-red');
+                }
+
+                // Kelembapan tanah
+                const tanahStatus = document.getElementById('kelembapan-status');
+                if (sensorData.kelembapanTanah < 60) tanahStatus.innerHTML = '⚠️ Kering, perlu siram';
+                else if (sensorData.kelembapanTanah > 85) tanahStatus.innerHTML = '⚠️ Terlalu basah';
+                else tanahStatus.innerHTML = '✅ Optimal (60-85%)';
+                if (sensorData.kelembapanTanah < 60 || sensorData.kelembapanTanah > 85) {
+                    tanahStatus.className = 'mt-2 text-xs text-red-600 dark:text-red-400';
+                } else {
+                    tanahStatus.className = 'mt-2 text-xs text-green-600 dark:text-green-400';
+                }
+
+                // Kelembapan udara
+                const udaraStatus = document.getElementById('humidity-status');
+                if (sensorData.kelembapanUdara < 50) udaraStatus.innerHTML = '⚠️ Udara kering';
+                else if (sensorData.kelembapanUdara > 80) udaraStatus.innerHTML = '⚠️ Kelembapan tinggi, risiko kulat';
+                else udaraStatus.innerHTML = '✅ Normal (50-80%)';
+                if (sensorData.kelembapanUdara < 50 || sensorData.kelembapanUdara > 80) {
+                    udaraStatus.className = 'mt-2 text-xs text-red-600 dark:text-red-400';
+                } else {
+                    udaraStatus.className = 'mt-2 text-xs text-green-600 dark:text-green-400';
+                }
+
+                // pH
+                const phStatus = document.getElementById('ph-status');
+                if (sensorData.ph < 6.0) phStatus.innerHTML = '⚠️ Tanah terlalu masam (baja kapur diperlukan)';
+                else if (sensorData.ph > 7.5) phStatus.innerHTML = '⚠️ Tanah beralkali';
+                else phStatus.innerHTML = '✅ Sesuai untuk kebanyakan tanaman (6.0-7.5)';
+                if (sensorData.ph < 6.0 || sensorData.ph > 7.5) {
+                    phStatus.className = 'mt-2 text-xs text-red-600 dark:text-red-400';
+                } else {
+                    phStatus.className = 'mt-2 text-xs text-green-600 dark:text-green-400';
+                }
+
+                // Cahaya
+                const lightStatus = document.getElementById('light-status');
+                if (sensorData.cahaya < 10000) lightStatus.innerHTML = '⚠️ Cahaya rendah, pertumbuhan terbantut';
+                else if (sensorData.cahaya > 25000) lightStatus.innerHTML = '⚠️ Cahaya tinggi, risiko terbakar daun';
+                else lightStatus.innerHTML = '✅ Baik (10000-25000 lux)';
+                if (sensorData.cahaya < 10000 || sensorData.cahaya > 25000) {
+                    lightStatus.className = 'mt-2 text-xs text-red-600 dark:text-red-400';
+                } else {
+                    lightStatus.className = 'mt-2 text-xs text-green-600 dark:text-green-400';
+                }
+            }
+
+            function updateAlerts() {
+                const container = document.getElementById('alert-container');
+                let alerts = [];
+                if (sensorData.suhu > 30) alerts.push('🌡️ Suhu melebihi 30°C – buka ventilator atau kipas.');
+                if (sensorData.kelembapanTanah < 60) alerts.push('💧 Kelembapan tanah rendah – jadualkan siraman automatik.');
+                if (sensorData.kelembapanTanah > 85) alerts.push('💧 Kelembapan tanah terlalu tinggi – kurangkan siraman.');
+                if (sensorData.kelembapanUdara > 80) alerts.push('💨 Kelembapan udara tinggi – risiko penyakit kulat.');
+                if (sensorData.ph < 6.0) alerts.push('🧪 Tanah terlalu masam – tambah kapur pertanian.');
+                if (sensorData.cahaya < 10000) alerts.push('☀️ Cahaya rendah – pertimbangkan lampu grow light.');
+                if (alerts.length === 0) {
+                    container.innerHTML = '<div class="p-3 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded">✅ Semua parameter dalam julat normal. Teruskan pemantauan.</div>';
+                } else {
+                    container.innerHTML = alerts.map(alert => `<div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 rounded text-sm">⚠️ ${alert}</div>`).join('');
+                }
+            }
+
+            // ---------- Chart.js history (24h simulation) ----------
+            let historyTemperatures = [27.2, 27.8, 28.1, 28.5, 28.9, 29.2, 29.0, 28.7, 28.4, 28.0, 27.6, 27.3];
+            let timeLabels = ['12am','2am','4am','6am','8am','10am','12pm','2pm','4pm','6pm','8pm','10pm'];
+            let tempChartInstance = null;
+
+            function initChart() {
+                const ctx = document.getElementById('tempHistoryChart').getContext('2d');
+                const isDark = document.documentElement.classList.contains('dark');
+                const gridColor = isDark ? '#374151' : '#e5e7eb';
+                const textColor = isDark ? '#d1d5db' : '#4b5563';
+                
+                if (tempChartInstance) tempChartInstance.destroy();
+                tempChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: timeLabels,
+                        datasets: [{
+                            label: 'Suhu (°C)',
+                            data: historyTemperatures,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#059669'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { labels: { color: textColor } },
+                            tooltip: { mode: 'index' }
+                        },
+                        scales: {
+                            y: { grid: { color: gridColor }, ticks: { color: textColor } },
+                            x: { grid: { color: gridColor }, ticks: { color: textColor, rotation: -30 } }
+                        }
+                    }
+                });
+            }
+
+            function updateChartTheme() {
+                if (tempChartInstance) {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const gridColor = isDark ? '#374151' : '#e5e7eb';
+                    const textColor = isDark ? '#d1d5db' : '#4b5563';
+                    tempChartInstance.options.scales.y.grid.color = gridColor;
+                    tempChartInstance.options.scales.x.grid.color = gridColor;
+                    tempChartInstance.options.scales.y.ticks.color = textColor;
+                    tempChartInstance.options.scales.x.ticks.color = textColor;
+                    tempChartInstance.options.plugins.legend.labels.color = textColor;
+                    tempChartInstance.update();
+                }
+            }
+
+            function addHistoryPoint(newTemp) {
+                historyTemperatures.push(newTemp);
+                if (historyTemperatures.length > 12) historyTemperatures.shift();
+                if (tempChartInstance) {
+                    tempChartInstance.data.datasets[0].data = historyTemperatures;
+                    tempChartInstance.update();
+                }
+            }
+
+            // ---------- Auto-refresh setiap 10 saat ----------
+            let refreshInterval;
+            function startAutoRefresh() {
+                if (refreshInterval) clearInterval(refreshInterval);
+                refreshInterval = setInterval(() => {
+                    generateRandomSensorData();
+                }, 10000);
+            }
+
+            // ---------- Logout & Auth ----------
+            function logout() {
+                localStorage.removeItem('greenhouse_logged_in');
+                window.location.href = 'login.html';
+            }
+
+            function checkAuth() {
+                const loggedIn = localStorage.getItem('greenhouse_logged_in');
+                if (!loggedIn) window.location.href = 'login.html';
+            }
+
+            // ---------- Event binding ----------
+            function bindEvents() {
+                const darkBtn = document.getElementById('darkmode-toggle');
+                if (darkBtn) darkBtn.addEventListener('click', toggleDarkMode);
+                const refreshBtn = document.getElementById('refresh-btn');
+                if (refreshBtn) refreshBtn.addEventListener('click', () => generateRandomSensorData());
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logout(); });
+            }
+
+            // ---------- Initialise everything ----------
+            function init() {
+                initDarkMode();
+                checkAuth();
+                initChart();
+                generateRandomSensorData();  // set initial UI
+                bindEvents();
+                startAutoRefresh();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
