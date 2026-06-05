@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ms" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Produktiviti ladang – tugasan, pekerja, hasil, dan analisis kecekapan untuk Greenhouse SaaS.">
+    <title>Produktiviti | Greenhouse SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { transition: background-color 0.3s, color 0.2s; }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-3px); }
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Navbar (lengkap dengan pautan ke semua halaman) -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M6 14h12m-6-8v16m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-bold text-xl">GreenHouse SaaS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="dashboard.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Dashboard</a>
+                    <a href="sensor.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Sensor</a>
+                    <a href="weather.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Cuaca</a>
+                    <a href="sales.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Jualan</a>
+                    <a href="inventory.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Inventori</a>
+                    <a href="report.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Laporan</a>
+                    <a href="tetapan.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Tetapan</a>
+                    <button id="darkmode-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="login.html" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm transition">Log Keluar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold">⚡ Produktiviti Ladang</h1>
+                <p class="text-gray-600 dark:text-gray-400">Kecekapan tugasan, pekerja, dan hasil tanaman</p>
+            </div>
+            <button id="add-record-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                + Rekod Harian
+            </button>
+        </div>
+
+        <!-- Kad KPI Utama -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">✅ Penyelesaian Tugasan (Minggu ini)</p>
+                <p class="text-3xl font-bold text-green-600 dark:text-green-400"><span id="task-completion">78</span>%</p>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                    <div id="task-progress-bar" class="bg-green-600 h-2 rounded-full progress-bar" style="width: 78%"></div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">👨‍🌾 Produktiviti Pekerja</p>
+                <p class="text-3xl font-bold"><span id="worker-productivity">85</span>%</p>
+                <span class="text-xs text-green-600">▲ +5% vs bulan lepas</span>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">🌾 Hasil per m²</p>
+                <p class="text-3xl font-bold"><span id="yield-per-sqm">2.4</span> kg/m²</p>
+                <span class="text-xs text-green-600">▲ +0.2</span>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">⏱️ Masa Purata Tugasan</p>
+                <p class="text-3xl font-bold"><span id="avg-task-time">2.5</span> jam</p>
+                <span class="text-xs text-red-600">▼ +0.3 jam</span>
+            </div>
+        </div>
+
+        <!-- Baris graf -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+                <h2 class="text-lg font-semibold mb-3">📈 Trend Produktiviti (6 bulan)</h2>
+                <canvas id="productivityTrendChart" height="200"></canvas>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+                <h2 class="text-lg font-semibold mb-3">📊 Produktiviti Mengikut Kawasan</h2>
+                <canvas id="areaProductivityChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Jadual Rekod Produktiviti Harian -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+            <div class="px-5 pt-5 pb-2 flex justify-between items-center">
+                <h2 class="text-xl font-semibold">📋 Rekod Produktiviti Harian</h2>
+                <button id="export-productivity" class="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 px-3 py-1 rounded">Eksport CSV</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Tarikh</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Tugasan Selesai</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Jumlah Tugasan</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">% Selesai</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Pekerja (orang)</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Hasil (kg)</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productivity-table-body">
+                        <!-- Data dari JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal untuk Tambah Rekod Harian -->
+    <div id="record-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden transition-all">
+        <div class="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-4 p-6 shadow-2xl">
+            <h3 class="text-xl font-semibold mb-4">Tambah Rekod Produktiviti</h3>
+            <form id="productivity-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Tarikh</label>
+                    <input type="date" id="record-date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Tugasan Selesai</label>
+                    <input type="number" id="tasks-done" required min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Jumlah Tugasan</label>
+                    <input type="number" id="tasks-total" required min="1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Bilangan Pekerja</label>
+                    <input type="number" id="workers" required min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Hasil Tuai (kg)</label>
+                    <input type="number" id="harvest-yield" required min="0" step="0.1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="mt-12 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <p>© 2025 Greenhouse SaaS – Data produktiviti disimpan dalam penyemak imbas anda.</p>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- Dark mode ----------
+            function initDarkMode() {
+                const saved = localStorage.getItem('greenhouse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+            function toggleDarkMode() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('greenhouse-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('greenhouse-theme', 'dark');
+                }
+                updateChartsTheme();
+            }
+
+            // ---------- Productivity Data (localStorage) ----------
+            let productivityRecords = [];
+            const STORAGE_KEY = 'greenhouse_productivity';
+
+            function loadProductivity() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    productivityRecords = JSON.parse(stored);
+                } else {
+                    // Mock data for last 7 days
+                    const today = new Date();
+                    productivityRecords = [];
+                    for (let i = 6; i >= 0; i--) {
+                        const d = new Date(today);
+                        d.setDate(today.getDate() - i);
+                        const dateStr = d.toISOString().slice(0,10);
+                        const total = Math.floor(8 + Math.random() * 5);
+                        const done = Math.floor(total * (0.6 + Math.random() * 0.35));
+                        productivityRecords.push({
+                            id: Date.now() - i,
+                            date: dateStr,
+                            tasksDone: done,
+                            tasksTotal: total,
+                            workers: Math.floor(3 + Math.random() * 5),
+                            harvestYield: parseFloat((50 + Math.random() * 150).toFixed(1))
+                        });
+                    }
+                    saveProductivity();
+                }
+                renderProductivity();
+                updateKPIs();
+                updateCharts();
+            }
+
+            function saveProductivity() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(productivityRecords));
+            }
+
+            function getNextId() {
+                return productivityRecords.length > 0 ? Math.max(...productivityRecords.map(r => r.id)) + 1 : 1;
+            }
+
+            // Render table
+            function renderProductivity() {
+                const tbody = document.getElementById('productivity-table-body');
+                if (productivityRecords.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">Tiada rekod produktiviti</td></tr>';
+                    return;
+                }
+                // Sort by date descending
+                const sorted = [...productivityRecords].sort((a,b) => new Date(b.date) - new Date(a.date));
+                tbody.innerHTML = sorted.map(rec => {
+                    const percent = ((rec.tasksDone / rec.tasksTotal) * 100).toFixed(0);
+                    return `
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-5 py-3 text-sm">${rec.date}</td>
+                            <td class="px-5 py-3 text-sm">${rec.tasksDone}</td>
+                            <td class="px-5 py-3 text-sm">${rec.tasksTotal}</td>
+                            <td class="px-5 py-3 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span>${percent}%</span>
+                                    <div class="w-16 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-600 h-2 rounded-full" style="width: ${percent}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-5 py-3 text-sm">${rec.workers}</td>
+                            <td class="px-5 py-3 text-sm">${rec.harvestYield} kg</td>
+                            <td class="px-5 py-3 text-sm">
+                                <button class="delete-record text-red-600 hover:text-red-800" data-id="${rec.id}">🗑️ Padam</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Attach delete handlers
+                document.querySelectorAll('.delete-record').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(btn.dataset.id);
+                        if (confirm('Padam rekod ini?')) {
+                            productivityRecords = productivityRecords.filter(r => r.id !== id);
+                            saveProductivity();
+                            renderProductivity();
+                            updateKPIs();
+                            updateCharts();
+                        }
+                    });
+                });
+            }
+
+            function updateKPIs() {
+                if (productivityRecords.length === 0) {
+                    document.getElementById('task-completion').innerText = '0';
+                    document.getElementById('task-progress-bar').style.width = '0%';
+                    document.getElementById('worker-productivity').innerText = '0';
+                    document.getElementById('yield-per-sqm').innerText = '0';
+                    document.getElementById('avg-task-time').innerText = '0';
+                    return;
+                }
+                // Last 7 days (or all if less)
+                const last7 = productivityRecords.slice(-7);
+                const totalTasks = last7.reduce((sum, r) => sum + r.tasksTotal, 0);
+                const totalDone = last7.reduce((sum, r) => sum + r.tasksDone, 0);
+                const completionRate = totalTasks === 0 ? 0 : (totalDone / totalTasks) * 100;
+                document.getElementById('task-completion').innerText = Math.round(completionRate);
+                document.getElementById('task-progress-bar').style.width = completionRate + '%';
+
+                // Worker productivity: (harvest / workers) normalized (mock: assume target 30kg per worker per day)
+                const totalHarvest = last7.reduce((sum, r) => sum + r.harvestYield, 0);
+                const totalWorkers = last7.reduce((sum, r) => sum + r.workers, 0);
+                const workerProd = totalWorkers === 0 ? 0 : Math.min(100, (totalHarvest / totalWorkers) * 2); // mock formula
+                document.getElementById('worker-productivity').innerText = Math.round(workerProd);
+
+                // Yield per square meter (mock: assume 1000 m² total area)
+                const avgYieldPerDay = totalHarvest / last7.length;
+                document.getElementById('yield-per-sqm').innerText = (avgYieldPerDay / 1000).toFixed(2);
+
+                // Average task time (mock: assume each task takes 0.5 hour, but based on completion)
+                const avgTaskTime = totalDone === 0 ? 0 : (totalTasks * 0.5) / totalDone;
+                document.getElementById('avg-task-time').innerText = avgTaskTime.toFixed(1);
+            }
+
+            // Charts
+            let trendChart, areaChart;
+            function updateCharts() {
+                // Trend chart: last 6 weeks (or all records grouped by week)
+                const recordsByWeek = groupRecordsByWeek(productivityRecords);
+                const weeks = recordsByWeek.map(w => w.week);
+                const completionRates = recordsByWeek.map(w => w.completion);
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#d1d5db' : '#4b5563';
+                const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+                if (trendChart) trendChart.destroy();
+                const ctxTrend = document.getElementById('productivityTrendChart').getContext('2d');
+                trendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: weeks,
+                        datasets: [{
+                            label: 'Kadar Selesai Tugasan (%)',
+                            data: completionRates,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#059669'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { labels: { color: textColor } } },
+                        scales: {
+                            y: { grid: { color: gridColor }, ticks: { color: textColor, min: 0, max: 100 } },
+                            x: { grid: { color: gridColor }, ticks: { color: textColor } }
+                        }
+                    }
+                });
+
+                // Area chart (mock: 4 zones)
+                const zones = ['Blok Timur', 'Blok Barat', 'Blok Utara', 'Blok Selatan'];
+                const zoneProductivity = [78, 65, 82, 71];
+                if (areaChart) areaChart.destroy();
+                const ctxArea = document.getElementById('areaProductivityChart').getContext('2d');
+                areaChart = new Chart(ctxArea, {
+                    type: 'bar',
+                    data: {
+                        labels: zones,
+                        datasets: [{
+                            label: 'Produktiviti (%)',
+                            data: zoneProductivity,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: '#10b981',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { labels: { color: textColor } } },
+                        scales: {
+                            y: { grid: { color: gridColor }, ticks: { color: textColor, min: 0, max: 100 } },
+                            x: { grid: { color: gridColor }, ticks: { color: textColor } }
+                        }
+                    }
+                });
+            }
+
+            function updateChartsTheme() {
+                if (trendChart) updateCharts(); // recreate charts
+            }
+
+            function groupRecordsByWeek(records) {
+                // Group records by week (simple: last 6 weeks)
+                const weeks = {};
+                records.forEach(rec => {
+                    const date = new Date(rec.date);
+                    const weekStart = new Date(date);
+                    weekStart.setDate(date.getDate() - date.getDay());
+                    const weekKey = weekStart.toISOString().slice(0,10);
+                    if (!weeks[weekKey]) {
+                        weeks[weekKey] = { totalTasks: 0, totalDone: 0 };
+                    }
+                    weeks[weekKey].totalTasks += rec.tasksTotal;
+                    weeks[weekKey].totalDone += rec.tasksDone;
+                });
+                const sortedWeeks = Object.keys(weeks).sort().slice(-6);
+                return sortedWeeks.map(week => ({
+                    week: week.slice(5),
+                    completion: weeks[week].totalTasks === 0 ? 0 : (weeks[week].totalDone / weeks[week].totalTasks) * 100
+                }));
+            }
+
+            // Add record modal
+            const modal = document.getElementById('record-modal');
+            const form = document.getElementById('productivity-form');
+            const dateInput = document.getElementById('record-date');
+            const tasksDoneInput = document.getElementById('tasks-done');
+            const tasksTotalInput = document.getElementById('tasks-total');
+            const workersInput = document.getElementById('workers');
+            const harvestYieldInput = document.getElementById('harvest-yield');
+
+            function openModal() {
+                // Set default date to today
+                dateInput.value = new Date().toISOString().slice(0,10);
+                tasksDoneInput.value = '';
+                tasksTotalInput.value = '';
+                workersInput.value = '';
+                harvestYieldInput.value = '';
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            function addRecord(event) {
+                event.preventDefault();
+                const date = dateInput.value;
+                const tasksDone = parseInt(tasksDoneInput.value);
+                const tasksTotal = parseInt(tasksTotalInput.value);
+                const workers = parseInt(workersInput.value);
+                const harvestYield = parseFloat(harvestYieldInput.value);
+
+                if (!date || isNaN(tasksDone) || isNaN(tasksTotal) || isNaN(workers) || isNaN(harvestYield)) {
+                    alert('Sila lengkapkan semua ruangan.');
+                    return;
+                }
+                if (tasksDone > tasksTotal) {
+                    alert('Tugasan selesai tidak boleh melebihi jumlah tugasan.');
+                    return;
+                }
+                if (tasksTotal <= 0 || workers <= 0 || harvestYield < 0) {
+                    alert('Nilai tidak sah.');
+                    return;
+                }
+
+                // Check if record for this date already exists
+                const existing = productivityRecords.find(r => r.date === date);
+                if (existing) {
+                    if (confirm('Rekod untuk tarikh ini sudah wujud. Gantikan?')) {
+                        existing.tasksDone = tasksDone;
+                        existing.tasksTotal = tasksTotal;
+                        existing.workers = workers;
+                        existing.harvestYield = harvestYield;
+                        saveProductivity();
+                    }
+                } else {
+                    const newId = getNextId();
+                    productivityRecords.push({
+                        id: newId,
+                        date: date,
+                        tasksDone: tasksDone,
+                        tasksTotal: tasksTotal,
+                        workers: workers,
+                        harvestYield: harvestYield
+                    });
+                    saveProductivity();
+                }
+                renderProductivity();
+                updateKPIs();
+                updateCharts();
+                closeModal();
+            }
+
+            // Export CSV
+            function exportToCSV() {
+                if (productivityRecords.length === 0) {
+                    alert('Tiada data untuk dieksport.');
+                    return;
+                }
+                const headers = ["Tarikh", "Tugasan Selesai", "Jumlah Tugasan", "Peratus Selesai", "Pekerja", "Hasil (kg)"];
+                const rows = productivityRecords.map(r => {
+                    const percent = ((r.tasksDone / r.tasksTotal) * 100).toFixed(0);
+                    return [r.date, r.tasksDone, r.tasksTotal, percent + '%', r.workers, r.harvestYield];
+                });
+                const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `produktiviti_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // ---------- Auth guard & logout ----------
+            function checkAuth() {
+                const loggedIn = localStorage.getItem('greenhouse_logged_in');
+                if (!loggedIn) window.location.href = 'login.html';
+            }
+            function logout() {
+                localStorage.removeItem('greenhouse_logged_in');
+                window.location.href = 'login.html';
+            }
+
+            // ---------- Event binding ----------
+            function bindEvents() {
+                document.getElementById('darkmode-toggle').addEventListener('click', toggleDarkMode);
+                document.getElementById('add-record-btn').addEventListener('click', openModal);
+                document.getElementById('modal-cancel').addEventListener('click', closeModal);
+                document.getElementById('export-productivity').addEventListener('click', exportToCSV);
+                form.addEventListener('submit', addRecord);
+                document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            }
+
+            // ---------- Initialize ----------
+            function init() {
+                initDarkMode();
+                checkAuth();
+                loadProductivity();
+                bindEvents();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
