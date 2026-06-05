@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ms" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Ramalan cuaca untuk ladang – suhu, hujan, angin, dan cadangan untuk rumah hijau.">
+    <title>Ramalan Cuaca | Greenhouse SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { transition: background-color 0.3s, color 0.2s; }
+        .weather-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .weather-card:hover { transform: translateY(-4px); }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Navbar (sama seperti halaman lain) -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M6 14h12m-6-8v16m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-bold text-xl">GreenHouse SaaS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="dashboard.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Dashboard</a>
+                    <a href="sensor.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Sensor</a>
+                    <a href="report.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Laporan</a>
+                    <a href="tetapan.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Tetapan</a>
+                    <button id="darkmode-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="login.html" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm transition">Log Keluar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header dengan tarikh & lokasi -->
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold">🌤️ Ramalan Cuaca</h1>
+                <p class="text-gray-600 dark:text-gray-400">Kawasan: <span id="location-name">Kuala Langat, Selangor</span> (kemaskini setiap jam)</p>
+            </div>
+            <button id="refresh-weather" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Segar Semula
+            </button>
+        </div>
+
+        <!-- Cuaca Semasa (big card) -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-800 dark:to-blue-900 rounded-2xl shadow-xl p-6 mb-8 text-white">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <p class="text-sm opacity-90">Hari Ini</p>
+                    <p class="text-5xl font-bold mt-1"><span id="current-temp">29</span>°C</p>
+                    <p class="text-xl mt-1" id="current-condition">Kebanyakannya Cerah</p>
+                    <div class="flex gap-4 mt-4 text-sm">
+                        <span>💧 Kelembapan: <span id="current-humidity">72</span>%</span>
+                        <span>🌬️ Angin: <span id="current-wind">12</span> km/j</span>
+                        <span>☔ Hujan: <span id="current-rain">0</span> mm</span>
+                    </div>
+                </div>
+                <div class="text-7xl mt-4 md:mt-0" id="weather-icon">☀️</div>
+            </div>
+        </div>
+
+        <!-- Ramalan 5 Hari -->
+        <h2 class="text-xl font-semibold mb-4">📅 Ramalan 5 Hari Ke Hadapan</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <!-- forecast cards will be populated by JS -->
+            <div id="forecast-container" class="contents"></div>
+        </div>
+
+        <!-- Cadangan untuk ladang (berdasarkan cuaca) -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+            <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">🌱 Cadangan Harian untuk Rumah Hijau</h2>
+            <div id="recommendation" class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
+                Memuatkan cadangan...
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-12 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <p>© 2025 Greenhouse SaaS – Data cuaca simulasi. Untuk data sebenar, sambungkan ke API cuaca.</p>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- Dark mode (konsisten) ----------
+            function initDarkMode() {
+                const saved = localStorage.getItem('greenhouse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+            function toggleDarkMode() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('greenhouse-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('greenhouse-theme', 'dark');
+                }
+            }
+
+            // ---------- Data cuaca simulasi (realistik untuk Malaysia) ----------
+            let currentWeather = {
+                temp: 29,
+                condition: "Kebanyakannya Cerah",
+                humidity: 72,
+                wind: 12,
+                rain: 0,
+                icon: "☀️"
+            };
+
+            const forecastData = [
+                { day: "Esok", tempHigh: 31, tempLow: 25, condition: "Hujan Petir", humidity: 85, wind: 18, rain: 15, icon: "⛈️" },
+                { day: "Rabu", tempHigh: 30, tempLow: 24, condition: "Hujan Ringan", humidity: 82, wind: 14, rain: 8, icon: "🌧️" },
+                { day: "Khamis", tempHigh: 29, tempLow: 24, condition: "Mendung", humidity: 78, wind: 12, rain: 2, icon: "☁️" },
+                { day: "Jumaat", tempHigh: 30, tempLow: 25, condition: "Cerah Berawan", humidity: 70, wind: 10, rain: 0, icon: "⛅" },
+                { day: "Sabtu", tempHigh: 32, tempLow: 26, condition: "Terik", humidity: 65, wind: 8, rain: 0, icon: "☀️" }
+            ];
+
+            // Fungsi untuk menjana semula cuaca semasa dengan variasi rawak (tapi realistik)
+            function generateCurrentWeather() {
+                const conditions = [
+                    { cond: "Cerah", icon: "☀️", tempMin: 28, tempMax: 33, humidMin: 55, humidMax: 75, rainMin: 0, rainMax: 0, windMin: 5, windMax: 12 },
+                    { cond: "Cerah Berawan", icon: "⛅", tempMin: 27, tempMax: 32, humidMin: 60, humidMax: 80, rainMin: 0, rainMax: 0, windMin: 8, windMax: 15 },
+                    { cond: "Mendung", icon: "☁️", tempMin: 26, tempMax: 30, humidMin: 70, humidMax: 85, rainMin: 0, rainMax: 3, windMin: 10, windMax: 18 },
+                    { cond: "Hujan Ringan", icon: "🌧️", tempMin: 25, tempMax: 29, humidMin: 80, humidMax: 92, rainMin: 4, rainMax: 12, windMin: 12, windMax: 22 },
+                    { cond: "Hujan Petir", icon: "⛈️", tempMin: 24, tempMax: 28, humidMin: 85, humidMax: 95, rainMin: 10, rainMax: 30, windMin: 15, windMax: 28 }
+                ];
+                const idx = Math.floor(Math.random() * conditions.length);
+                const c = conditions[idx];
+                const temp = Math.floor(c.tempMin + Math.random() * (c.tempMax - c.tempMin));
+                const humidity = Math.floor(c.humidMin + Math.random() * (c.humidMax - c.humidMin));
+                const rain = c.rainMin + Math.random() * (c.rainMax - c.rainMin);
+                const wind = Math.floor(c.windMin + Math.random() * (c.windMax - c.windMin));
+                return {
+                    temp: temp,
+                    condition: c.cond,
+                    humidity: humidity,
+                    wind: wind,
+                    rain: parseFloat(rain.toFixed(1)),
+                    icon: c.icon
+                };
+            }
+
+            function updateCurrentUI() {
+                document.getElementById('current-temp').innerText = currentWeather.temp;
+                document.getElementById('current-condition').innerText = currentWeather.condition;
+                document.getElementById('current-humidity').innerText = currentWeather.humidity;
+                document.getElementById('current-wind').innerText = currentWeather.wind;
+                document.getElementById('current-rain').innerText = currentWeather.rain;
+                document.getElementById('weather-icon').innerHTML = currentWeather.icon;
+            }
+
+            function renderForecast() {
+                const container = document.getElementById('forecast-container');
+                container.innerHTML = '';
+                forecastData.forEach(day => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-4 weather-card';
+                    card.innerHTML = `
+                        <p class="font-semibold text-center">${day.day}</p>
+                        <div class="text-4xl text-center my-2">${day.icon}</div>
+                        <p class="text-center text-lg font-bold">${day.tempHigh}° / ${day.tempLow}°</p>
+                        <p class="text-center text-xs text-gray-500 dark:text-gray-400">${day.condition}</p>
+                        <div class="mt-2 text-xs space-y-1 text-center">
+                            <div>💧 ${day.humidity}%</div>
+                            <div>🌬️ ${day.wind} km/j</div>
+                            <div>☔ ${day.rain} mm</div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            // Cadangan berdasarkan cuaca semasa dan ramalan
+            function generateRecommendation() {
+                const temp = currentWeather.temp;
+                const humidity = currentWeather.humidity;
+                const rain = currentWeather.rain;
+                const wind = currentWeather.wind;
+                const condition = currentWeather.condition;
+                let advice = "";
+
+                if (temp > 32) advice += "🔥 Suhu sangat tinggi. Buka sistem pengudaraan dan tingkatkan kekerapan penyiraman. ";
+                else if (temp > 30) advice += "🌡️ Suhu panas. Pastikan ventilator berfungsi dan naungan dibuka jika perlu. ";
+                else if (temp < 24) advice += "❄️ Suhu agak sejuk. Tutup sedikit bukaan untuk mengekalkan haba. ";
+
+                if (humidity > 85) advice += "💨 Kelembapan tinggi! Risiko kulat. Aktifkan kipas dan kurangkan penyiraman. ";
+                else if (humidity < 55) advice += "💧 Kelembapan rendah. Kabus atau siraman tambahan diperlukan. ";
+
+                if (rain > 10) advice += "☔ Hujan lebat dijangkakan. Tutup bukaan bumbung rumah hijau dan periksa saliran. ";
+                else if (rain > 0) advice += "🌦️ Hujan ringan. Manfaatkan air hujan untuk simpanan, tetapi elakkan kebocoran. ";
+
+                if (wind > 20) advice += "💨 Angin kencang! Kuatkan struktur dan tutup sisi rumah hijau. ";
+
+                if (condition.includes("Petir")) advice += "⚡ Ribut petir. Cabut plag peralatan elektronik luar dan elakkan aktiviti di ladang. ";
+
+                if (advice === "") advice = "✅ Cuaca baik untuk pertumbuhan tanaman. Teruskan rutin penyelenggaraan biasa.";
+
+                document.getElementById('recommendation').innerHTML = `<p class="text-sm">${advice}</p>`;
+            }
+
+            // Refresh semua data (cuaca semasa dijana semula)
+            function refreshAllWeather() {
+                currentWeather = generateCurrentWeather();
+                updateCurrentUI();
+                generateRecommendation();
+                // Optional: forecast kekal sama untuk demo (boleh juga diubah secara rawak)
+                // Jika ingin forecast dinamik, boleh tambah fungsi generateForecast()
+            }
+
+            // ---------- Auth guard & logout ----------
+            function checkAuth() {
+                const loggedIn = localStorage.getItem('greenhouse_logged_in');
+                if (!loggedIn) window.location.href = 'login.html';
+            }
+
+            function logout() {
+                localStorage.removeItem('greenhouse_logged_in');
+                window.location.href = 'login.html';
+            }
+
+            // ---------- Auto-refresh setiap 30 minit (simulasi) ----------
+            let refreshInterval;
+            function startAutoRefresh() {
+                if (refreshInterval) clearInterval(refreshInterval);
+                refreshInterval = setInterval(() => {
+                    refreshAllWeather();
+                }, 30 * 60 * 1000); // 30 minit
+            }
+
+            // ---------- Event binding ----------
+            function bindEvents() {
+                const darkBtn = document.getElementById('darkmode-toggle');
+                if (darkBtn) darkBtn.addEventListener('click', toggleDarkMode);
+                const refreshBtn = document.getElementById('refresh-weather');
+                if (refreshBtn) refreshBtn.addEventListener('click', refreshAllWeather);
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logout(); });
+            }
+
+            // ---------- Initialize ----------
+            function init() {
+                initDarkMode();
+                checkAuth();
+                // generate initial weather (simulasi)
+                currentWeather = generateCurrentWeather();
+                updateCurrentUI();
+                renderForecast();       // forecast tetap (boleh juga random)
+                generateRecommendation();
+                bindEvents();
+                startAutoRefresh();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
