@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ms" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Jualan hasil tanaman – pendapatan, kuantiti, dan analisis untuk Greenhouse SaaS.">
+    <title>Jualan | Greenhouse SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { transition: background-color 0.3s, color 0.2s; }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Navbar (sama seperti halaman lain) -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M6 14h12m-6-8v16m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-bold text-xl">GreenHouse SaaS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="dashboard.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Dashboard</a>
+                    <a href="sensor.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Sensor</a>
+                    <a href="weather.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Cuaca</a>
+                    <a href="report.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Laporan</a>
+                    <a href="tetapan.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Tetapan</a>
+                    <button id="darkmode-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="login.html" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm transition">Log Keluar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold">💰 Jualan Hasil Tanaman</h1>
+                <p class="text-gray-600 dark:text-gray-400">Ringkasan pendapatan dan statistik jualan untuk bulan Jun 2025</p>
+            </div>
+            <div class="flex gap-2">
+                <select id="month-selector" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm">
+                    <option value="jun">Jun 2025</option>
+                    <option value="mei">Mei 2025</option>
+                    <option value="apr">Apr 2025</option>
+                </select>
+                <button id="refresh-sales" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">Muat Semula</button>
+            </div>
+        </div>
+
+        <!-- Kad Stat Utama -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Jumlah Pendapatan</p>
+                <p class="text-3xl font-bold text-green-600 dark:text-green-400">RM <span id="total-revenue">12,480</span></p>
+                <span class="text-xs text-green-600">▲ +15% vs bulan lepas</span>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Kuantiti Terjual</p>
+                <p class="text-3xl font-bold"><span id="total-quantity">1,284</span> kg</p>
+                <span class="text-xs text-green-600">▲ +8%</span>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Purata Harga / kg</p>
+                <p class="text-3xl font-bold">RM <span id="avg-price">9.72</span></p>
+                <span class="text-xs text-green-600">▲ +0.50</span>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Tanaman Terlaris</p>
+                <p class="text-2xl font-bold truncate"><span id="top-crop">Tomato Ceri</span></p>
+                <span class="text-xs text-green-600">RM 4,200</span>
+            </div>
+        </div>
+
+        <!-- Graf Jualan Bulanan (Chart.js) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+                <h2 class="text-lg font-semibold mb-3">📊 Pendapatan Mengikut Tanaman</h2>
+                <canvas id="cropRevenueChart" height="200"></canvas>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+                <h2 class="text-lg font-semibold mb-3">📈 Tren Jualan (6 Bulan)</h2>
+                <canvas id="monthlyTrendChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Jadual Transaksi Terkini -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+            <div class="px-5 pt-5 pb-2 flex justify-between items-center">
+                <h2 class="text-xl font-semibold">🧾 Senarai Jualan Terkini</h2>
+                <button id="export-csv" class="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 px-3 py-1 rounded">Eksport CSV</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Tarikh</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Tanaman</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Kuantiti (kg)</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Harga/kg (RM)</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Jumlah (RM)</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Pembeli</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Data dari JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-12 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <p>© 2025 Greenhouse SaaS – Data jualan simulasi untuk tujuan demonstrasi.</p>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- Dark mode ----------
+            function initDarkMode() {
+                const saved = localStorage.getItem('greenhouse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+            function toggleDarkMode() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('greenhouse-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('greenhouse-theme', 'dark');
+                }
+                // Update charts (recreate with new theme)
+                if (window.cropChart && window.trendChart) {
+                    updateChartColors();
+                }
+            }
+
+            // ---------- Data jualan simulasi ----------
+            let salesData = {
+                jun: {
+                    revenue: 12480,
+                    quantity: 1284,
+                    crops: [
+                        { name: "Tomato Ceri", revenue: 4200, quantity: 420, price: 10.00 },
+                        { name: "Selada", revenue: 3100, quantity: 310, price: 10.00 },
+                        { name: "Timun", revenue: 2800, quantity: 350, price: 8.00 },
+                        { name: "Terung", revenue: 1800, quantity: 150, price: 12.00 },
+                        { name: "Cili", revenue: 580, quantity: 54, price: 10.74 }
+                    ],
+                    transactions: [
+                        { date: "2025-06-28", crop: "Tomato Ceri", qty: 85, price: 10.0, buyer: "Pasar Borang KL" },
+                        { date: "2025-06-25", crop: "Selada", qty: 62, price: 10.0, buyer: "Restoran Hijau" },
+                        { date: "2025-06-22", crop: "Timun", qty: 110, price: 8.0, buyer: "Pasar Tani" },
+                        { date: "2025-06-20", crop: "Terung", qty: 45, price: 12.0, buyer: "Eco Farm Mart" },
+                        { date: "2025-06-18", crop: "Tomato Ceri", qty: 94, price: 10.0, buyer: "Giant Hypermarket" },
+                        { date: "2025-06-15", crop: "Selada", qty: 78, price: 10.0, buyer: "Salad Factory Sdn Bhd" },
+                        { date: "2025-06-12", crop: "Timun", qty: 65, price: 8.0, buyer: "Pasar Borang KL" },
+                        { date: "2025-06-10", crop: "Cili", qty: 54, price: 10.74, buyer: "Restoran Pedas" }
+                    ]
+                },
+                mei: {
+                    revenue: 10850,
+                    quantity: 1190,
+                    crops: [
+                        { name: "Tomato Ceri", revenue: 3650, quantity: 365, price: 10.0 },
+                        { name: "Selada", revenue: 2850, quantity: 285, price: 10.0 },
+                        { name: "Timun", revenue: 2650, quantity: 331, price: 8.0 },
+                        { name: "Terung", revenue: 1700, quantity: 142, price: 12.0 }
+                    ],
+                    transactions: []
+                },
+                apr: {
+                    revenue: 9820,
+                    quantity: 1105,
+                    crops: [
+                        { name: "Tomato Ceri", revenue: 3200, quantity: 320, price: 10.0 },
+                        { name: "Selada", revenue: 2600, quantity: 260, price: 10.0 },
+                        { name: "Timun", revenue: 2400, quantity: 300, price: 8.0 },
+                        { name: "Terung", revenue: 1620, quantity: 135, price: 12.0 }
+                    ],
+                    transactions: []
+                }
+            };
+
+            let currentMonth = "jun";
+            let cropChart, trendChart;
+
+            // Helper: update UI based on selected month
+            function updateSalesUI() {
+                const data = salesData[currentMonth];
+                if (!data) return;
+
+                // Update stats
+                document.getElementById('total-revenue').innerText = data.revenue.toLocaleString();
+                document.getElementById('total-quantity').innerText = data.quantity.toLocaleString();
+                const avg = (data.revenue / data.quantity).toFixed(2);
+                document.getElementById('avg-price').innerText = avg;
+                const topCrop = data.crops.reduce((max, crop) => crop.revenue > max.revenue ? crop : max, data.crops[0]);
+                document.getElementById('top-crop').innerText = topCrop.name;
+
+                // Update table
+                const tbody = document.getElementById('sales-table-body');
+                if (data.transactions && data.transactions.length > 0) {
+                    tbody.innerHTML = data.transactions.map(t => `
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-5 py-3 text-sm">${t.date}</td>
+                            <td class="px-5 py-3 text-sm">${t.crop}</td>
+                            <td class="px-5 py-3 text-sm">${t.qty}</td>
+                            <td class="px-5 py-3 text-sm">RM ${t.price.toFixed(2)}</td>
+                            <td class="px-5 py-3 text-sm font-medium">RM ${(t.qty * t.price).toFixed(2)}</td>
+                            <td class="px-5 py-3 text-sm">${t.buyer}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Tiada transaksi untuk bulan ini</td></tr>';
+                }
+
+                // Update charts
+                updateCropChart(data.crops);
+                updateTrendChart();
+            }
+
+            function updateCropChart(crops) {
+                const ctx = document.getElementById('cropRevenueChart').getContext('2d');
+                const labels = crops.map(c => c.name);
+                const revenues = crops.map(c => c.revenue);
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#d1d5db' : '#4b5563';
+                const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+                if (cropChart) cropChart.destroy();
+                cropChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Pendapatan (RM)',
+                            data: revenues,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: '#10b981',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { labels: { color: textColor } },
+                            tooltip: { callbacks: { label: (ctx) => `RM ${ctx.raw.toLocaleString()}` } }
+                        },
+                        scales: {
+                            y: { grid: { color: gridColor }, ticks: { color: textColor, callback: (v) => 'RM ' + v } },
+                            x: { grid: { color: gridColor }, ticks: { color: textColor } }
+                        }
+                    }
+                });
+            }
+
+            function updateTrendChart() {
+                const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+                const months = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun'];
+                const revenues = [8200, 8900, 9450, 9820, 10850, 12480];
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#d1d5db' : '#4b5563';
+                const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+                if (trendChart) trendChart.destroy();
+                trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Pendapatan (RM)',
+                            data: revenues,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#059669'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { labels: { color: textColor } } },
+                        scales: {
+                            y: { grid: { color: gridColor }, ticks: { color: textColor, callback: (v) => 'RM ' + v } },
+                            x: { grid: { color: gridColor }, ticks: { color: textColor } }
+                        }
+                    }
+                });
+            }
+
+            function updateChartColors() {
+                // Recreate charts with new theme
+                const data = salesData[currentMonth];
+                if (data) updateCropChart(data.crops);
+                updateTrendChart();
+            }
+
+            // Export to CSV
+            function exportToCSV() {
+                const data = salesData[currentMonth];
+                if (!data.transactions || data.transactions.length === 0) {
+                    alert('Tiada data untuk dieksport.');
+                    return;
+                }
+                let csvRows = [["Tarikh", "Tanaman", "Kuantiti(kg)", "Harga/kg(RM)", "Jumlah(RM)", "Pembeli"]];
+                data.transactions.forEach(t => {
+                    csvRows.push([t.date, t.crop, t.qty, t.price, (t.qty * t.price).toFixed(2), t.buyer]);
+                });
+                const csvContent = csvRows.map(row => row.join(",")).join("\n");
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `jualan_${currentMonth}_2025.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // ---------- Auth guard & logout ----------
+            function checkAuth() {
+                const loggedIn = localStorage.getItem('greenhouse_logged_in');
+                if (!loggedIn) window.location.href = 'login.html';
+            }
+            function logout() {
+                localStorage.removeItem('greenhouse_logged_in');
+                window.location.href = 'login.html';
+            }
+
+            // ---------- Event binding ----------
+            function bindEvents() {
+                document.getElementById('darkmode-toggle').addEventListener('click', toggleDarkMode);
+                document.getElementById('month-selector').addEventListener('change', (e) => {
+                    currentMonth = e.target.value;
+                    updateSalesUI();
+                });
+                document.getElementById('refresh-sales').addEventListener('click', () => updateSalesUI());
+                document.getElementById('export-csv').addEventListener('click', exportToCSV);
+                document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+            }
+
+            // ---------- Initialize ----------
+            function init() {
+                initDarkMode();
+                checkAuth();
+                updateSalesUI();
+                bindEvents();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
