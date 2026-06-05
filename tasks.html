@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ms" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Pengurusan tugasan harian untuk pekerja ladang – deadline, status, prioriti.">
+    <title>Tugasan | Greenhouse SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { transition: background-color 0.3s, color 0.2s; }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-3px); }
+        .task-complete { opacity: 0.6; text-decoration: line-through; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Navbar (lengkap dengan semua pautan) -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M6 14h12m-6-8v16m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-bold text-xl">GreenHouse SaaS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="dashboard.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Dashboard</a>
+                    <a href="sensor.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Sensor</a>
+                    <a href="weather.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Cuaca</a>
+                    <a href="sales.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Jualan</a>
+                    <a href="inventory.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Inventori</a>
+                    <a href="productivity.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Produktiviti</a>
+                    <a href="report.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Laporan</a>
+                    <a href="tetapan.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Tetapan</a>
+                    <button id="darkmode-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="login.html" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm transition">Log Keluar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold">✅ Tugasan Ladang</h1>
+                <p class="text-gray-600 dark:text-gray-400">Urus tugasan pekerja, tarikh akhir, dan status</p>
+            </div>
+            <button id="add-task-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                + Tugasan Baru
+            </button>
+        </div>
+
+        <!-- Stat Kad Ringkas -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3 text-center">
+                <p class="text-2xl font-bold text-green-600" id="total-tasks">0</p>
+                <p class="text-xs">Jumlah Tugasan</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3 text-center">
+                <p class="text-2xl font-bold text-yellow-600" id="pending-tasks">0</p>
+                <p class="text-xs">Belum Selesai</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3 text-center">
+                <p class="text-2xl font-bold text-blue-600" id="inprogress-tasks">0</p>
+                <p class="text-xs">Sedang Dijalankan</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3 text-center">
+                <p class="text-2xl font-bold text-green-600" id="completed-tasks">0</p>
+                <p class="text-xs">Selesai</p>
+            </div>
+        </div>
+
+        <!-- Tapis & Cari -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-6 flex flex-col sm:flex-row gap-3">
+            <input type="text" id="search-task" placeholder="Cari tugasan..." class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+            <select id="status-filter" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+                <option value="all">Semua Status</option>
+                <option value="Belum Mula">⏳ Belum Mula</option>
+                <option value="Sedang Dijalankan">🔄 Sedang Dijalankan</option>
+                <option value="Selesai">✅ Selesai</option>
+            </select>
+            <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Reset</button>
+        </div>
+
+        <!-- Senarai Tugasan (kad) -->
+        <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Cards will be injected here -->
+        </div>
+    </main>
+
+    <!-- Modal untuk Tambah/Edit Tugasan -->
+    <div id="task-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden transition-all">
+        <div class="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full mx-4 p-6 shadow-2xl">
+            <h3 id="modal-title" class="text-xl font-semibold mb-4">Tambah Tugasan</h3>
+            <form id="task-form" class="space-y-4">
+                <input type="hidden" id="task-id">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Tugasan</label>
+                    <input type="text" id="task-name" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Pekerja / Krew</label>
+                    <input type="text" id="task-assignee" required placeholder="cth: Ali, Pasukan A" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Tarikh Akhir</label>
+                        <input type="date" id="task-due" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Prioriti</label>
+                        <select id="task-priority" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                            <option value="Rendah">🟢 Rendah</option>
+                            <option value="Sederhana">🟠 Sederhana</option>
+                            <option value="Tinggi">🔴 Tinggi</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Status</label>
+                    <select id="task-status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                        <option value="Belum Mula">⏳ Belum Mula</option>
+                        <option value="Sedang Dijalankan">🔄 Sedang Dijalankan</option>
+                        <option value="Selesai">✅ Selesai</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Penerangan (pilihan)</label>
+                    <textarea id="task-desc" rows="2" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="mt-12 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <p>© 2025 Greenhouse SaaS – Tugasan disimpan dalam penyemak imbas anda.</p>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- Dark mode ----------
+            function initDarkMode() {
+                const saved = localStorage.getItem('greenhouse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+            function toggleDarkMode() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('greenhouse-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('greenhouse-theme', 'dark');
+                }
+            }
+
+            // ---------- Tasks Data (localStorage) ----------
+            let tasks = [];
+            const STORAGE_KEY = 'greenhouse_tasks';
+
+            function loadTasks() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    tasks = JSON.parse(stored);
+                } else {
+                    // Mock data
+                    const today = new Date().toISOString().slice(0,10);
+                    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+                    tasks = [
+                        { id: 1, name: "Siram blok timur", assignee: "Ali", dueDate: today, priority: "Tinggi", status: "Sedang Dijalankan", description: "Gunakan sistem pengairan titisan" },
+                        { id: 2, name: "Baja tomato", assignee: "Pasukan B", dueDate: tomorrow, priority: "Sederhana", status: "Belum Mula", description: "Baja NPK 15-15-15" },
+                        { id: 3, name: "Servis kipas rumah hijau", assignee: "Teknikal", dueDate: today, priority: "Rendah", status: "Selesai", description: "" }
+                    ];
+                    saveTasks();
+                }
+                renderTasks();
+                updateStats();
+            }
+
+            function saveTasks() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+            }
+
+            function getNextId() {
+                return tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+            }
+
+            let currentStatusFilter = "all";
+            let currentSearch = "";
+
+            function renderTasks() {
+                let filtered = tasks.filter(task => {
+                    if (currentStatusFilter !== "all" && task.status !== currentStatusFilter) return false;
+                    if (currentSearch && !task.name.toLowerCase().includes(currentSearch.toLowerCase()) && 
+                        !task.assignee.toLowerCase().includes(currentSearch.toLowerCase())) return false;
+                    return true;
+                });
+                const container = document.getElementById('tasks-container');
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Tiada tugasan ditemui</div>';
+                    return;
+                }
+                container.innerHTML = filtered.map(task => {
+                    const priorityColor = task.priority === 'Tinggi' ? 'text-red-600' : (task.priority === 'Sederhana' ? 'text-orange-500' : 'text-green-600');
+                    const statusBadge = task.status === 'Selesai' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                        (task.status === 'Sedang Dijalankan' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300');
+                    const isOverdue = (task.status !== 'Selesai' && task.dueDate < new Date().toISOString().slice(0,10));
+                    return `
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 card-hover ${isOverdue ? 'border-l-4 border-red-500' : ''}">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-semibold text-lg">${escapeHtml(task.name)}</h3>
+                                <div class="flex gap-1">
+                                    <button class="edit-task text-blue-600 hover:text-blue-800" data-id="${task.id}">✏️</button>
+                                    <button class="delete-task text-red-600 hover:text-red-800" data-id="${task.id}">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">👤 ${escapeHtml(task.assignee)}</div>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <span class="text-xs px-2 py-1 rounded-full ${priorityColor} bg-gray-100 dark:bg-gray-700">${task.priority}</span>
+                                <span class="text-xs px-2 py-1 rounded-full ${statusBadge}">${task.status}</span>
+                                <span class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700">📅 ${task.dueDate}</span>
+                            </div>
+                            ${task.description ? `<p class="text-sm mt-2 text-gray-600 dark:text-gray-400">${escapeHtml(task.description)}</p>` : ''}
+                            ${isOverdue ? '<p class="text-xs text-red-500 mt-1">⚠️ Tarikh akhir lepas!</p>' : ''}
+                            <div class="mt-3">
+                                <select class="status-change text-xs border rounded px-2 py-1" data-id="${task.id}">
+                                    <option value="Belum Mula" ${task.status === 'Belum Mula' ? 'selected' : ''}>⏳ Belum Mula</option>
+                                    <option value="Sedang Dijalankan" ${task.status === 'Sedang Dijalankan' ? 'selected' : ''}>🔄 Sedang Dijalankan</option>
+                                    <option value="Selesai" ${task.status === 'Selesai' ? 'selected' : ''}>✅ Selesai</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Attach event listeners for edit, delete, status change
+                document.querySelectorAll('.edit-task').forEach(btn => {
+                    btn.addEventListener('click', (e) => openEditModal(parseInt(btn.dataset.id)));
+                });
+                document.querySelectorAll('.delete-task').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        if (confirm('Padam tugasan ini?')) {
+                            const id = parseInt(btn.dataset.id);
+                            tasks = tasks.filter(t => t.id !== id);
+                            saveTasks();
+                            renderTasks();
+                            updateStats();
+                        }
+                    });
+                });
+                document.querySelectorAll('.status-change').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        const id = parseInt(select.dataset.id);
+                        const newStatus = select.value;
+                        const task = tasks.find(t => t.id === id);
+                        if (task) {
+                            task.status = newStatus;
+                            saveTasks();
+                            renderTasks();
+                            updateStats();
+                        }
+                    });
+                });
+            }
+
+            function updateStats() {
+                const total = tasks.length;
+                const pending = tasks.filter(t => t.status === 'Belum Mula').length;
+                const inprogress = tasks.filter(t => t.status === 'Sedang Dijalankan').length;
+                const completed = tasks.filter(t => t.status === 'Selesai').length;
+                document.getElementById('total-tasks').innerText = total;
+                document.getElementById('pending-tasks').innerText = pending;
+                document.getElementById('inprogress-tasks').innerText = inprogress;
+                document.getElementById('completed-tasks').innerText = completed;
+            }
+
+            function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&')return '&amp;';if(m==='<')return '&lt;';if(m==='>')return '&gt;';return m;}); }
+
+            // Modal handling
+            const modal = document.getElementById('task-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const taskForm = document.getElementById('task-form');
+            const taskId = document.getElementById('task-id');
+            const taskName = document.getElementById('task-name');
+            const taskAssignee = document.getElementById('task-assignee');
+            const taskDue = document.getElementById('task-due');
+            const taskPriority = document.getElementById('task-priority');
+            const taskStatus = document.getElementById('task-status');
+            const taskDesc = document.getElementById('task-desc');
+
+            function openAddModal() {
+                modalTitle.innerText = 'Tambah Tugasan';
+                taskId.value = '';
+                taskName.value = '';
+                taskAssignee.value = '';
+                taskDue.value = new Date().toISOString().slice(0,10);
+                taskPriority.value = 'Sederhana';
+                taskStatus.value = 'Belum Mula';
+                taskDesc.value = '';
+                modal.classList.remove('hidden');
+            }
+
+            function openEditModal(id) {
+                const task = tasks.find(t => t.id === id);
+                if (!task) return;
+                modalTitle.innerText = 'Edit Tugasan';
+                taskId.value = task.id;
+                taskName.value = task.name;
+                taskAssignee.value = task.assignee;
+                taskDue.value = task.dueDate;
+                taskPriority.value = task.priority;
+                taskStatus.value = task.status;
+                taskDesc.value = task.description || '';
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal() { modal.classList.add('hidden'); }
+
+            function saveTask(event) {
+                event.preventDefault();
+                const id = taskId.value ? parseInt(taskId.value) : null;
+                const name = taskName.value.trim();
+                const assignee = taskAssignee.value.trim();
+                const dueDate = taskDue.value;
+                const priority = taskPriority.value;
+                const status = taskStatus.value;
+                const description = taskDesc.value.trim();
+
+                if (!name || !assignee || !dueDate) {
+                    alert('Sila lengkapkan nama, pekerja, dan tarikh akhir.');
+                    return;
+                }
+                if (id) {
+                    const index = tasks.findIndex(t => t.id === id);
+                    if (index !== -1) {
+                        tasks[index] = { ...tasks[index], name, assignee, dueDate, priority, status, description };
+                    }
+                } else {
+                    const newId = getNextId();
+                    tasks.push({ id: newId, name, assignee, dueDate, priority, status, description });
+                }
+                saveTasks();
+                renderTasks();
+                updateStats();
+                closeModal();
+            }
+
+            // Filter handlers
+            function bindFilters() {
+                const searchInput = document.getElementById('search-task');
+                const statusFilter = document.getElementById('status-filter');
+                const resetBtn = document.getElementById('reset-filters');
+                searchInput.addEventListener('input', () => {
+                    currentSearch = searchInput.value;
+                    renderTasks();
+                });
+                statusFilter.addEventListener('change', () => {
+                    currentStatusFilter = statusFilter.value;
+                    renderTasks();
+                });
+                resetBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    statusFilter.value = 'all';
+                    currentSearch = '';
+                    currentStatusFilter = 'all';
+                    renderTasks();
+                });
+            }
+
+            // ---------- Auth & logout ----------
+            function checkAuth() {
+                const loggedIn = localStorage.getItem('greenhouse_logged_in');
+                if (!loggedIn) window.location.href = 'login.html';
+            }
+            function logout() {
+                localStorage.removeItem('greenhouse_logged_in');
+                window.location.href = 'login.html';
+            }
+
+            function bindEvents() {
+                document.getElementById('darkmode-toggle').addEventListener('click', toggleDarkMode);
+                document.getElementById('add-task-btn').addEventListener('click', openAddModal);
+                document.getElementById('modal-cancel').addEventListener('click', closeModal);
+                taskForm.addEventListener('submit', saveTask);
+                document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            }
+
+            function init() {
+                initDarkMode();
+                checkAuth();
+                loadTasks();
+                bindFilters();
+                bindEvents();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
