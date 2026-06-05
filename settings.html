@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ms" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Tetapan akaun dan pilihan untuk Greenhouse SaaS.">
+    <title>Tetapan | Greenhouse SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { transition: background-color 0.3s, color 0.2s; }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M6 14h12m-6-8v16m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-bold text-xl">GreenHouse SaaS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="dashboard.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Dashboard</a>
+                    <a href="report.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Laporan</a>
+                    <button id="darkmode-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="login.html" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm transition">Log Keluar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold">⚙️ Tetapan Akaun</h1>
+            <p class="text-gray-600 dark:text-gray-400">Urus profil, kata laluan dan pemberitahuan anda.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Sidebar info ringkas -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 h-fit card-hover">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-3xl font-bold text-green-700 dark:text-green-300 mb-3" id="user-initial">
+                        P
+                    </div>
+                    <h3 class="text-lg font-semibold" id="display-name">Pengguna</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400" id="display-email">pengguna@ladang.com</p>
+                    <div class="mt-4 text-xs text-gray-400">Ahli sejak Jun 2025</div>
+                </div>
+            </div>
+
+            <!-- Main settings forms -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Profil -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                    <h2 class="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">👤 Profil</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Nama Penuh</label>
+                            <input type="text" id="fullname" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Emel</label>
+                            <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">No. Telefon (pilihan)</label>
+                            <input type="tel" id="phone" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white focus:ring-green-500 focus:border-green-500" placeholder="012-3456789">
+                        </div>
+                        <button id="save-profile" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">Simpan Profil</button>
+                    </div>
+                </div>
+
+                <!-- Tukar Kata Laluan (simulasi) -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                    <h2 class="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">🔒 Tukar Kata Laluan</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Kata Laluan Semasa</label>
+                            <input type="password" id="current-pwd" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Kata Laluan Baru</label>
+                            <input type="password" id="new-pwd" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Ulang Kata Laluan Baru</label>
+                            <input type="password" id="confirm-pwd" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <button id="change-pwd-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition">Tukar Kata Laluan</button>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">*Demo sahaja. Tiada perubahan sebenar disimpan.</p>
+                    </div>
+                </div>
+
+                <!-- Pemberitahuan -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                    <h2 class="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">🔔 Pemberitahuan</h2>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" id="notif-email" class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                            <span>Hantar notifikasi melalui emel untuk amaran suhu & kelembapan</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" id="notif-daily" class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                            <span>Ringkasan harian tugasan (pagi)</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" id="notif-report" class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                            <span>Laporan mingguan hasil tanaman</span>
+                        </label>
+                        <button id="save-notif" class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">Simpan Keutamaan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="dashboard.html" class="text-green-600 hover:underline text-sm">← Kembali ke Dashboard</a>
+        </div>
+    </main>
+
+    <footer class="mt-12 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <p>© 2025 Greenhouse SaaS – Tetapan disimpan dalam penyemak imbas anda.</p>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- Dark mode (synced with localStorage) ----------
+            function initDarkMode() {
+                const saved = localStorage.getItem('greenhouse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+
+            function toggleDarkMode() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('greenhouse-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('greenhouse-theme', 'dark');
+                }
+            }
+
+            // ---------- Load profile & notifications from localStorage ----------
+            function loadProfile() {
+                const name = localStorage.getItem('greenhouse_user_name') || 'Pengurus Ladang';
+                const email = localStorage.getItem('greenhouse_user_email') || 'pengurus@ladang.com';
+                const phone = localStorage.getItem('greenhouse_user_phone') || '';
+                document.getElementById('fullname').value = name;
+                document.getElementById('email').value = email;
+                document.getElementById('phone').value = phone;
+                document.getElementById('display-name').innerText = name;
+                document.getElementById('display-email').innerText = email;
+                const initial = name.charAt(0).toUpperCase();
+                document.getElementById('user-initial').innerText = initial;
+            }
+
+            function saveProfile() {
+                const name = document.getElementById('fullname').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                if (!name || !email) {
+                    alert('Nama dan emel wajib diisi.');
+                    return;
+                }
+                if (!email.includes('@') || !email.includes('.')) {
+                    alert('Sila masukkan emel yang sah.');
+                    return;
+                }
+                localStorage.setItem('greenhouse_user_name', name);
+                localStorage.setItem('greenhouse_user_email', email);
+                localStorage.setItem('greenhouse_user_phone', phone);
+                // Update sidebar
+                document.getElementById('display-name').innerText = name;
+                document.getElementById('display-email').innerText = email;
+                document.getElementById('user-initial').innerText = name.charAt(0).toUpperCase();
+                alert('Profil berjaya disimpan!');
+            }
+
+            // Notification preferences
+            function loadNotifications() {
+                const notifEmail = localStorage.getItem('greenhouse_notif_email') === 'true';
+                const notifDaily = localStorage.getItem('greenhouse_notif_daily') === 'true';
+                const notifReport = localStorage.getItem('greenhouse_notif_report') === 'true';
+                document.getElementById('notif-email').checked = notifEmail;
+                document.getElementById('notif-daily').checked = notifDaily;
+                document.getElementById('notif-report').checked = notifReport;
+            }
+
+            function saveNotifications() {
+                localStorage.setItem('greenhouse_notif_email', document.getElementById('notif-email').checked);
+                localStorage.setItem('greenhouse_notif_daily', document.getElementById('notif-daily').checked);
+                localStorage.setItem('greenhouse_notif_report', document.getElementById('notif-report').checked);
+                alert('Keutamaan notifikasi disimpan.');
+            }
+
+            // Change password (simulated, no backend)
+            function changePassword() {
+                const current = document.getElementById('current-pwd').value;
+                const newPwd = document.getElementById('new-pwd').value;
+                const confirm = document.getElementById('confirm-pwd').value;
+                // For demo, we don't store actual password. Just check if fields are filled.
+                if (!current || !newPwd || !confirm) {
+                    alert('Sila lengkapkan semua ruang kata laluan.');
+                    return;
+                }
+                if (newPwd !== confirm) {
+                    alert('Kata laluan baru dan ulangan tidak sepadan.');
+                    return;
+                }
+                if (newPwd.length < 4) {
+                    alert('Kata laluan baru sekurang-kurangnya 4 aksara.');
+                    return;
+                }
+                // Simulate success (no actual storage)
+                alert('Kata laluan berjaya ditukar (simulasi). Sila gunakan kata laluan baru untuk log masuk akan datang.');
+                document.getElementById('current-pwd').value = '';
+                document.getElementById('new-pwd').value = '';
+                document.getElementById('confirm-pwd').value = '';
+            }
+
+            // Logout: redirect to login and clear logged_in flag (optional)
+            function logout() {
+                localStorage.removeItem('greenhouse_logged_in'); // optional, but good practice
+                window.location.href = 'login.html';
+            }
+
+            // Simple auth guard (if not logged in, redirect to login)
+            function checkAuth() {
+                const loggedIn = localStorage.getItem('greenhouse_logged_in');
+                if (!loggedIn) {
+                    // For safety, redirect to login
+                    window.location.href = 'login.html';
+                }
+            }
+
+            // ---------- Event binding ----------
+            function bindEvents() {
+                const darkBtn = document.getElementById('darkmode-toggle');
+                if (darkBtn) darkBtn.addEventListener('click', toggleDarkMode);
+                const saveProfileBtn = document.getElementById('save-profile');
+                if (saveProfileBtn) saveProfileBtn.addEventListener('click', saveProfile);
+                const saveNotifBtn = document.getElementById('save-notif');
+                if (saveNotifBtn) saveNotifBtn.addEventListener('click', saveNotifications);
+                const changePwdBtn = document.getElementById('change-pwd-btn');
+                if (changePwdBtn) changePwdBtn.addEventListener('click', changePassword);
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+
+            // ---------- Initialize page ----------
+            function init() {
+                initDarkMode();
+                checkAuth();      // redirect if no login session
+                loadProfile();
+                loadNotifications();
+                bindEvents();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
