@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ms" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Pengurusan inventori ladang – baja, benih, racun, alatan untuk Greenhouse SaaS.">
+    <title>Inventori | Greenhouse SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { transition: background-color 0.3s, color 0.2s; }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-3px); }
+        .low-stock { background-color: rgba(239, 68, 68, 0.1); }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Navbar (sama seperti halaman lain) -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M6 14h12m-6-8v16m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-bold text-xl">GreenHouse SaaS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="dashboard.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Dashboard</a>
+                    <a href="sensor.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Sensor</a>
+                    <a href="weather.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Cuaca</a>
+                    <a href="sales.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Jualan</a>
+                    <a href="report.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Laporan</a>
+                    <a href="tetapan.html" class="text-gray-600 dark:text-gray-300 hover:text-green-600 transition text-sm md:text-base">Tetapan</a>
+                    <button id="darkmode-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="login.html" id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm transition">Log Keluar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold">📦 Inventori Ladang</h1>
+                <p class="text-gray-600 dark:text-gray-400">Urus stok baja, benih, racun, dan alatan</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="add-item-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    + Tambah Item
+                </button>
+                <button id="export-inventory" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">Eksport CSV</button>
+            </div>
+        </div>
+
+        <!-- Stat Kad -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Jumlah Item</p>
+                <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="total-items">0</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Stok Rendah (≤ 10)</p>
+                <p class="text-3xl font-bold text-red-600" id="low-stock-count">0</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 card-hover">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">Nilai Stok Anggaran</p>
+                <p class="text-3xl font-bold">RM <span id="total-value">0</span></p>
+            </div>
+        </div>
+
+        <!-- Cari & Tapis -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-6 flex flex-col sm:flex-row gap-3">
+            <input type="text" id="search-input" placeholder="Cari nama item..." class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+            <select id="category-filter" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+                <option value="all">Semua Kategori</option>
+                <option value="Baja">🌿 Baja</option>
+                <option value="Benih">🌱 Benih</option>
+                <option value="Racun">🧪 Racun / Pestisid</option>
+                <option value="Alatan">🔧 Alatan</option>
+                <option value="Bekas">🪴 Bekas / Pasu</option>
+            </select>
+            <button id="reset-filter" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">Reset</button>
+        </div>
+
+        <!-- Jadual Inventori -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Item</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Kategori</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Kuantiti</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Unit</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Paras Stok</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Harga (RM)</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium uppercase">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Data dari JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal untuk Tambah/Edit Item -->
+    <div id="item-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden transition-all">
+        <div class="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full mx-4 p-6 shadow-2xl">
+            <h3 id="modal-title" class="text-xl font-semibold mb-4">Tambah Item</h3>
+            <form id="item-form" class="space-y-4">
+                <input type="hidden" id="item-id">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Item</label>
+                    <input type="text" id="item-name" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Kategori</label>
+                    <select id="item-category" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                        <option value="Baja">Baja</option>
+                        <option value="Benih">Benih</option>
+                        <option value="Racun">Racun</option>
+                        <option value="Alatan">Alatan</option>
+                        <option value="Bekas">Bekas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Kuantiti</label>
+                    <input type="number" id="item-quantity" required min="0" step="1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Unit</label>
+                    <input type="text" id="item-unit" required placeholder="kg, liter, unit, paket" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Paras Stok Minimum (amaran)</label>
+                    <input type="number" id="item-reorder" required min="0" step="1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Harga Seunit (RM)</label>
+                    <input type="number" id="item-price" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="modal-cancel" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="mt-12 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <p>© 2025 Greenhouse SaaS – Inventori disimpan dalam penyemak imbas anda.</p>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- Dark mode ----------
+            function initDarkMode() {
+                const saved = localStorage.getItem('greenhouse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+            function toggleDarkMode() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('greenhouse-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('greenhouse-theme', 'dark');
+                }
+            }
+
+            // ---------- Inventory Data (localStorage) ----------
+            let inventory = [];
+            const STORAGE_KEY = 'greenhouse_inventory';
+
+            function loadInventory() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    inventory = JSON.parse(stored);
+                } else {
+                    // Default mock data
+                    inventory = [
+                        { id: 1, name: "Baja Organik", category: "Baja", quantity: 45, unit: "kg", reorder: 20, price: 3.50 },
+                        { id: 2, name: "Benih Tomato Ceri", category: "Benih", quantity: 12, unit: "paket", reorder: 10, price: 8.00 },
+                        { id: 3, name: "Racun Serangga", category: "Racun", quantity: 8, unit: "liter", reorder: 10, price: 25.00 },
+                        { id: 4, name: "Gunting Tanaman", category: "Alatan", quantity: 15, unit: "unit", reorder: 5, price: 12.50 },
+                        { id: 5, name: "Pasu 10 inch", category: "Bekas", quantity: 50, unit: "unit", reorder: 20, price: 4.00 },
+                        { id: 6, name: "Baja NPK", category: "Baja", quantity: 30, unit: "kg", reorder: 15, price: 5.00 },
+                        { id: 7, name: "Benih Cili Padi", category: "Benih", quantity: 6, unit: "paket", reorder: 8, price: 7.50 }
+                    ];
+                    saveInventory();
+                }
+                renderInventory();
+            }
+
+            function saveInventory() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+            }
+
+            // Helper: get next ID
+            function getNextId() {
+                return inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
+            }
+
+            // Render table and stats
+            let currentFilter = "all";
+            let currentSearch = "";
+
+            function renderInventory() {
+                let filtered = inventory.filter(item => {
+                    if (currentFilter !== "all" && item.category !== currentFilter) return false;
+                    if (currentSearch && !item.name.toLowerCase().includes(currentSearch.toLowerCase())) return false;
+                    return true;
+                });
+
+                const tbody = document.getElementById('inventory-table-body');
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">Tiada item inventori</td></tr>';
+                } else {
+                    tbody.innerHTML = filtered.map(item => {
+                        const lowStock = item.quantity <= item.reorder;
+                        return `
+                            <tr class="${lowStock ? 'low-stock' : ''} hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-5 py-3 text-sm font-medium">${escapeHtml(item.name)}</td>
+                                <td class="px-5 py-3 text-sm">${item.category}</td>
+                                <td class="px-5 py-3 text-sm font-bold ${lowStock ? 'text-red-600' : ''}">${item.quantity}</td>
+                                <td class="px-5 py-3 text-sm">${item.unit}</td>
+                                <td class="px-5 py-3 text-sm">${item.reorder}</td>
+                                <td class="px-5 py-3 text-sm">RM ${item.price.toFixed(2)}</td>
+                                <td class="px-5 py-3 text-sm">
+                                    <button class="edit-item text-green-600 hover:text-green-800 mr-2" data-id="${item.id}">✏️ Edit</button>
+                                    <button class="delete-item text-red-600 hover:text-red-800" data-id="${item.id}">🗑️ Padam</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                // Update stats
+                const totalItems = inventory.length;
+                const lowStockCount = inventory.filter(i => i.quantity <= i.reorder).length;
+                const totalValue = inventory.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+                document.getElementById('total-items').innerText = totalItems;
+                document.getElementById('low-stock-count').innerText = lowStockCount;
+                document.getElementById('total-value').innerText = totalValue.toFixed(2);
+
+                // Re-attach event listeners for edit/delete buttons
+                document.querySelectorAll('.edit-item').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(btn.dataset.id);
+                        openEditModal(id);
+                    });
+                });
+                document.querySelectorAll('.delete-item').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(btn.dataset.id);
+                        if (confirm('Padam item ini?')) {
+                            inventory = inventory.filter(i => i.id !== id);
+                            saveInventory();
+                            renderInventory();
+                        }
+                    });
+                });
+            }
+
+            function escapeHtml(str) {
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+
+            // Modal handling
+            const modal = document.getElementById('item-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const itemForm = document.getElementById('item-form');
+            const itemId = document.getElementById('item-id');
+            const itemName = document.getElementById('item-name');
+            const itemCategory = document.getElementById('item-category');
+            const itemQuantity = document.getElementById('item-quantity');
+            const itemUnit = document.getElementById('item-unit');
+            const itemReorder = document.getElementById('item-reorder');
+            const itemPrice = document.getElementById('item-price');
+
+            function openAddModal() {
+                modalTitle.innerText = 'Tambah Item';
+                itemId.value = '';
+                itemName.value = '';
+                itemCategory.value = 'Baja';
+                itemQuantity.value = '';
+                itemUnit.value = '';
+                itemReorder.value = '';
+                itemPrice.value = '';
+                modal.classList.remove('hidden');
+            }
+
+            function openEditModal(id) {
+                const item = inventory.find(i => i.id === id);
+                if (!item) return;
+                modalTitle.innerText = 'Edit Item';
+                itemId.value = item.id;
+                itemName.value = item.name;
+                itemCategory.value = item.category;
+                itemQuantity.value = item.quantity;
+                itemUnit.value = item.unit;
+                itemReorder.value = item.reorder;
+                itemPrice.value = item.price;
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            function saveItem(event) {
+                event.preventDefault();
+                const id = itemId.value ? parseInt(itemId.value) : null;
+                const name = itemName.value.trim();
+                const category = itemCategory.value;
+                const quantity = parseInt(itemQuantity.value);
+                const unit = itemUnit.value.trim();
+                const reorder = parseInt(itemReorder.value);
+                const price = parseFloat(itemPrice.value);
+
+                if (!name || isNaN(quantity) || !unit || isNaN(reorder) || isNaN(price)) {
+                    alert('Sila lengkapkan semua ruangan.');
+                    return;
+                }
+                if (quantity < 0 || reorder < 0 || price < 0) {
+                    alert('Nilai tidak boleh negatif.');
+                    return;
+                }
+
+                if (id) {
+                    // Edit existing
+                    const index = inventory.findIndex(i => i.id === id);
+                    if (index !== -1) {
+                        inventory[index] = { ...inventory[index], name, category, quantity, unit, reorder, price };
+                    }
+                } else {
+                    // Add new
+                    const newId = getNextId();
+                    inventory.push({ id: newId, name, category, quantity, unit, reorder, price });
+                }
+                saveInventory();
+                renderInventory();
+                closeModal();
+            }
+
+            // Export CSV
+            function exportToCSV() {
+                if (inventory.length === 0) {
+                    alert('Tiada data untuk dieksport.');
+                    return;
+                }
+                const headers = ["ID", "Nama Item", "Kategori", "Kuantiti", "Unit", "Paras Stok Minimum", "Harga Seunit (RM)", "Nilai Stok (RM)"];
+                const rows = inventory.map(i => [
+                    i.id, i.name, i.category, i.quantity, i.unit, i.reorder, i.price.toFixed(2), (i.quantity * i.price).toFixed(2)
+                ]);
+                const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `inventori_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Filter and search handlers
+            function updateFilters() {
+                currentCategory = document.getElementById('category-filter').value;
+                currentSearch = document.getElementById('search-input').value;
+                renderInventory();
+            }
+            let currentCategory = "all";
+            function bindFilterEvents() {
+                const categoryFilter = document.getElementById('category-filter');
+                const searchInput = document.getElementById('search-input');
+                const resetBtn = document.getElementById('reset-filter');
+                categoryFilter.addEventListener('change', () => {
+                    currentFilter = categoryFilter.value;
+                    renderInventory();
+                });
+                searchInput.addEventListener('input', () => {
+                    currentSearch = searchInput.value;
+                    renderInventory();
+                });
+                resetBtn.addEventListener('click', () => {
+                    categoryFilter.value = 'all';
+                    searchInput.value = '';
+                    currentFilter = 'all';
+                    currentSearch = '';
+                    renderInventory();
+                });
+            }
+
+            // ---------- Auth guard & logout ----------
+            function checkAuth() {
+                const loggedIn = localStorage.getItem('greenhouse_logged_in');
+                if (!loggedIn) window.location.href = 'login.html';
+            }
+            function logout() {
+                localStorage.removeItem('greenhouse_logged_in');
+                window.location.href = 'login.html';
+            }
+
+            // ---------- Event binding ----------
+            function bindEvents() {
+                document.getElementById('darkmode-toggle').addEventListener('click', toggleDarkMode);
+                document.getElementById('add-item-btn').addEventListener('click', openAddModal);
+                document.getElementById('modal-cancel').addEventListener('click', closeModal);
+                document.getElementById('export-inventory').addEventListener('click', exportToCSV);
+                itemForm.addEventListener('submit', saveItem);
+                document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+                // Close modal on outside click
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            }
+
+            // ---------- Initialize ----------
+            function init() {
+                initDarkMode();
+                checkAuth();
+                loadInventory();
+                bindFilterEvents();
+                bindEvents();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
